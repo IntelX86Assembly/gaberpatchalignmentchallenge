@@ -1,83 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Performance</title>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  body {
-    margin: 0;
-    font-family: Arial;
-    background: #121212;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-
-  .card {
-    background: #1f1f1f;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    width: 320px;
-  }
-
-  h2 { margin-bottom: 20px; }
-
-  .stat {
-    margin: 10px 0;
-    font-size: 18px;
-  }
-
-  button {
-    margin-top: 20px;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    background: #333;
-    color: white;
-    cursor: pointer;
-  }
-
-  button:hover { background: #555; }
+body{
+  margin:0;
+  background:#121212;
+  color:white;
+  font-family:Arial;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.card{
+  background:#1f1f1f;
+  padding:20px;
+  border-radius:10px;
+  width:450px;
+}
+canvas{margin-top:15px;}
 </style>
 </head>
 
 <body>
-
 <div class="card">
-  <h2>Performance Summary</h2>
+<h2>Performance History</h2>
 
-  <div class="stat" id="correct"></div>
-  <div class="stat" id="wrong"></div>
-  <div class="stat" id="accuracy"></div>
-
-  <button onclick="window.location.href='index.html'">
-    Back to Training
-  </button>
+<canvas id="chart"></canvas>
 </div>
 
 <script>
-const data = JSON.parse(localStorage.getItem("visualChallengeSession")) || {
-  correct: 0,
-  wrong: 0,
-  rounds: 0
-};
+const history = JSON.parse(localStorage.getItem("history")) || [];
 
-const accuracy = data.rounds
-  ? Math.round((data.correct / data.rounds) * 100)
-  : 0;
+const labels = history.map((_,i)=>"S"+(i+1));
+const acc = history.map(h=>h.accuracy);
 
-document.getElementById("correct").textContent =
-  "Correct: " + data.correct;
+// MOVING AVERAGE (window = 3)
+function movingAvg(arr, size=3){
+  let res=[];
+  for(let i=0;i<arr.length;i++){
+    let start=Math.max(0,i-size+1);
+    let slice=arr.slice(start,i+1);
+    res.push(slice.reduce((a,b)=>a+b,0)/slice.length);
+  }
+  return res;
+}
 
-document.getElementById("wrong").textContent =
-  "Wrong: " + data.wrong;
+const smooth = movingAvg(acc,3);
 
-document.getElementById("accuracy").textContent =
-  "Accuracy: " + accuracy + "%";
+new Chart(chart,{
+  type:"line",
+  data:{
+    labels,
+    datasets:[
+      {
+        label:"Accuracy",
+        data:acc,
+        borderColor:"red",
+        tension:0.2
+      },
+      {
+        label:"Trend (Moving Avg)",
+        data:smooth,
+        borderColor:"lime",
+        tension:0.3
+      }
+    ]
+  },
+  options:{
+    scales:{y:{min:0,max:100}}
+  }
+});
 </script>
 
 </body>
