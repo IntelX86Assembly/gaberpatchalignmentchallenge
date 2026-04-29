@@ -48,13 +48,19 @@ body {
 .content {
   margin-top: 100px;
   text-align: center;
-  padding: 20px;
+}
+
+.chart {
+  width: 80%;
+  margin: auto;
 }
 
 .bar {
   height: 20px;
   background: limegreen;
-  margin: 5px 0;
+  margin: 6px 0;
+  text-align: left;
+  padding-left: 6px;
 }
 </style>
 </head>
@@ -66,13 +72,15 @@ body {
 </div>
 
 <div class="sidebar" id="sidebar">
-  <a href="index.html">Training</a>
-  <a href="performance.html">Performance</a>
+  <a href="index.html">Alignment Challenge</a>
+  <a href="index.html">Contrast Challenge</a>
+  <a href="index.html">Frequency Challenge</a>
+  <a href="performance.html">View Performance</a>
 </div>
 
 <div class="content">
   <h2>Performance History</h2>
-  <div id="chart"></div>
+  <div class="chart" id="chart"></div>
 </div>
 
 <script>
@@ -80,28 +88,28 @@ const sidebar=document.getElementById("sidebar");
 const hamburger=document.getElementById("hamburger");
 
 hamburger.onclick=e=>{
-  e.stopPropagation();
-  sidebar.classList.toggle("open");
+e.stopPropagation();
+sidebar.classList.toggle("open");
 };
 
 document.addEventListener("click",e=>{
-  if(!sidebar.contains(e.target)&&!hamburger.contains(e.target))
-    sidebar.classList.remove("open");
+if(!sidebar.contains(e.target)&&!hamburger.contains(e.target))
+sidebar.classList.remove("open");
 });
 
 const h=JSON.parse(localStorage.getItem("history"))||[];
 const chart=document.getElementById("chart");
 
 if(!h.length){
-  chart.innerHTML="<p>No data yet</p>";
+chart.innerHTML="<p>No data yet</p>";
 }else{
-  h.forEach((x,i)=>{
-    let d=document.createElement("div");
-    d.className="bar";
-    d.style.width=x.accuracy+"%";
-    d.textContent=`Session ${i+1}: ${x.accuracy}%`;
-    chart.appendChild(d);
-  });
+h.forEach((x,i)=>{
+const d=document.createElement("div");
+d.className="bar";
+d.style.width=x.accuracy+"%";
+d.textContent=`Session ${i+1} — ${x.accuracy}%`;
+chart.appendChild(d);
+});
 }
 </script>
 
