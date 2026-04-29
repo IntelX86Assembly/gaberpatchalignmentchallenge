@@ -15,18 +15,27 @@
       height: 100vh;
     }
 
-    /* Temporary glow animation */
-    body.glow {
-      animation: glowFlash 0.5s ease;
+    /* Glow animations */
+    body.glow-green {
+      animation: glowGreen 0.5s ease;
     }
 
-    @keyframes glowFlash {
+    body.glow-red {
+      animation: glowRed 0.5s ease;
+    }
+
+    @keyframes glowGreen {
       0%   { box-shadow: 0 0 0px limegreen inset; }
       50%  { box-shadow: 0 0 25px 8px limegreen inset; }
       100% { box-shadow: 0 0 0px limegreen inset; }
     }
 
-    /* Navbar */
+    @keyframes glowRed {
+      0%   { box-shadow: 0 0 0px red inset; }
+      50%  { box-shadow: 0 0 25px 8px red inset; }
+      100% { box-shadow: 0 0 0px red inset; }
+    }
+
     .navbar {
       width: 100%;
       height: 60px;
@@ -37,7 +46,6 @@
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 1000;
     }
 
     .hamburger {
@@ -45,7 +53,6 @@
       cursor: pointer;
     }
 
-    /* Sidebar */
     .sidebar {
       position: fixed;
       top: 0;
@@ -55,7 +62,6 @@
       background-color: #1e1e1e;
       padding-top: 60px;
       transition: left 0.3s ease;
-      z-index: 999;
     }
 
     .sidebar.open {
@@ -67,7 +73,6 @@
       padding: 15px 20px;
       color: white;
       text-decoration: none;
-      font-size: 18px;
     }
 
     .sidebar a:hover {
@@ -115,19 +120,16 @@
 </head>
 <body>
 
-  <!-- Navbar -->
   <div class="navbar">
     <div class="hamburger" id="hamburger">☰</div>
   </div>
 
-  <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
     <a href="#">Alignment Challenge</a>
     <a href="#">Contrast Challenge</a>
     <a href="#">Frequency Challenge</a>
   </div>
 
-  <!-- Main Content -->
   <div class="content">
     <div class="image-container">
       <img src="https://via.placeholder.com/150?text=1">
@@ -147,37 +149,66 @@
     const hamburger = document.getElementById("hamburger");
     const correctValue = 2;
 
-    // Toggle sidebar
+    // Audio setup
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTone(freq, duration) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.frequency.value = freq;
+      osc.type = "sine";
+
+      osc.start();
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playCorrectSound() {
+      playTone(600, 0.1);
+      setTimeout(() => playTone(900, 0.15), 100);
+    }
+
+    function playWrongSound() {
+      playTone(200, 0.2);
+    }
+
     hamburger.addEventListener("click", () => {
       sidebar.classList.toggle("open");
     });
 
-    // Close sidebar when clicking outside
     document.addEventListener("click", (e) => {
       if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
         sidebar.classList.remove("open");
       }
     });
 
-    // Single handler for both buttons + keyboard
-    function handleInput(num) {
-      console.log("Pressed:", num);
+    function triggerGlow(className) {
+      document.body.classList.remove("glow-green", "glow-red");
+      void document.body.offsetWidth; // restart animation
+      document.body.classList.add(className);
+    }
 
+    function handleInput(num) {
       if (Number(num) === correctValue) {
-        document.body.classList.remove("glow"); // reset animation
-        void document.body.offsetWidth; // force reflow so animation restarts
-        document.body.classList.add("glow");
+        triggerGlow("glow-green");
+        playCorrectSound();
+      } else {
+        triggerGlow("glow-red");
+        playWrongSound();
       }
     }
 
-    // Button clicks (no inline JS anymore)
     document.querySelectorAll("button").forEach(btn => {
       btn.addEventListener("click", () => {
         handleInput(btn.dataset.num);
       });
     });
 
-    // Keyboard input
     document.addEventListener("keydown", (e) => {
       if (["1","2","3"].includes(e.key)) {
         handleInput(e.key);
