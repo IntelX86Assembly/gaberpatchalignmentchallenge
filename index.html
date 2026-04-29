@@ -10,7 +10,6 @@ body {
   font-family: Arial, sans-serif;
   background-color: #121212;
   color: white;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -28,49 +27,18 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1100;
 }
 
 .hamburger { font-size: 26px; cursor: pointer; }
+.settings { margin-left: auto; cursor: pointer; }
 
-.settings {
-  margin-left: auto;
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* LEVEL DISPLAY */
+/* LEVEL */
 .level-indicator {
   position: fixed;
   top: 70px;
   left: 15px;
   font-size: 14px;
-  opacity: 0.8;
 }
-
-/* SIDEBAR */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: -250px;
-  width: 250px;
-  height: 100%;
-  background: #1e1e1e;
-  padding-top: 60px;
-  transition: left 0.3s ease;
-  z-index: 1000;
-}
-
-.sidebar.open { left: 0; }
-
-.sidebar a {
-  display: block;
-  padding: 15px;
-  color: white;
-  text-decoration: none;
-}
-
-.sidebar a:hover { background: #333; }
 
 /* CONTENT */
 .content {
@@ -78,12 +46,9 @@ body {
   margin-top: 110px;
 }
 
-.score {
-  margin-bottom: 10px;
-  font-size: 18px;
-}
+.score { margin-bottom: 10px; }
 
-/* PROGRESS BAR */
+/* PROGRESS */
 .progress-bar {
   width: 300px;
   height: 10px;
@@ -97,51 +62,17 @@ body {
   height: 100%;
   width: 0%;
   background: limegreen;
-  transition: width 0.3s ease;
 }
-
-/* IMAGES */
-.image-container {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 12px;
-}
-
-.image-container img {
-  width: 150px;
-  height: 150px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-/* BUTTONS */
-.button-container {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 18px;
-  cursor: pointer;
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 6px;
-}
-
-button:hover { background: #555; }
 
 /* HELP */
 .help-icon {
   position: fixed;
   top: 70px;
   right: 20px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+  width: 25px;
+  height: 25px;
   background: #444;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,73 +81,22 @@ button:hover { background: #555; }
 
 .tooltip {
   position: fixed;
-  top: 105px;
+  top: 100px;
   right: 20px;
   background: #222;
   padding: 10px;
-  border-radius: 6px;
-  width: 220px;
   display: none;
-  font-size: 13px;
-}
-
-/* SETTINGS */
-.settings-popup {
-  position: fixed;
-  top: 70px;
-  right: 15px;
-  background: #222;
-  padding: 12px;
-  border-radius: 8px;
-  display: none;
-}
-
-/* LIGHT MODE */
-body.light {
-  background-color: #f5f5f5;
-  color: #111;
-}
-
-body.light .navbar,
-body.light .sidebar { background: #ddd; }
-
-body.light button {
-  background: #ccc;
-  color: #111;
-}
-
-/* GLOW */
-body.glow-green { animation: glowGreen 0.5s ease; }
-body.glow-red { animation: glowRed 0.5s ease; }
-
-@keyframes glowGreen {
-  0% { box-shadow: 0 0 0px limegreen inset; }
-  50% { box-shadow: 0 0 25px 8px limegreen inset; }
-  100% { box-shadow: 0 0 0px inset; }
-}
-
-@keyframes glowRed {
-  0% { box-shadow: 0 0 0px red inset; }
-  50% { box-shadow: 0 0 25px 8px red inset; }
-  100% { box-shadow: 0 0 0px inset; }
 }
 
 /* POPUP */
 .popup {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  justify-content: center;
-  align-items: center;
-}
-
-.popup-content {
-  background: #222;
-  padding: 30px;
-  border-radius: 10px;
+  top:0;left:0;
+  width:100%;height:100%;
+  background: rgba(0,0,0,0.8);
+  display:none;
+  justify-content:center;
+  align-items:center;
 }
 </style>
 </head>
@@ -225,7 +105,7 @@ body.glow-red { animation: glowRed 0.5s ease; }
 
 <div class="navbar">
   <div class="hamburger" id="hamburger">☰</div>
-  <div class="settings" id="settingsBtn">⚙️</div>
+  <div class="settings">⚙️</div>
 </div>
 
 <div class="level-indicator">
@@ -235,13 +115,6 @@ body.glow-red { animation: glowRed 0.5s ease; }
 <div class="help-icon" id="helpIcon">?</div>
 <div class="tooltip" id="tooltip">
   This mode trains visual alignment. The ability of your brain to process and discriminate between visual offsets.
-</div>
-
-<div id="sidebar" class="sidebar">
-  <a href="index.html">Alignment Challenge</a>
-  <a href="contrast.html">Contrast Challenge</a>
-  <a href="frequency.html">Frequency Challenge</a>
-  <a href="performance.html">View Performance</a>
 </div>
 
 <div class="content">
@@ -267,35 +140,49 @@ body.glow-red { animation: glowRed 0.5s ease; }
   </div>
 </div>
 
-<div class="settings-popup" id="settingsPopup">
-  <label>
-    <input type="checkbox" id="themeToggle"> Light Mode
-  </label>
-</div>
-
 <div class="popup" id="popup">
-  <div class="popup-content">
+  <div>
     <h2>Training Complete</h2>
-    <button id="continueBtn">Continue Training</button>
-    <button id="viewBtn">View Performance</button>
+    <button onclick="location.reload()">Continue</button>
   </div>
 </div>
 
 <script>
-/* IMAGE POOLS (3 LEVELS) */
+
+/* ===== IMAGE POOLS (STRUCTURE PRESERVED) ===== */
 const imagePools = {
-  1: [["images/gabor-gaussian--1.00.png","images/gabor-gaussian-0.00.png","images/gabor-gaussian-1.00.png"]],
-  2: [["images/gabor-gaussian--0.50.png","images/gabor-gaussian-0.00.png","images/gabor-gaussian-0.50.png"]],
-  3: [["images/gabor-gaussian--0.25.png","images/gabor-gaussian-0.00.png","images/gabor-gaussian-0.25.png"]]
+
+  1: [
+    ["img1a","img1b","img1c"],
+    ["img2a","img2b","img2c"],
+    ["img3a","img3b","img3c"],
+    ["img4a","img4b","img4c"]
+  ],
+
+  2: [
+    ["img1a","img1b","img1c"],
+    ["img2a","img2b","img2c"],
+    ["img3a","img3b","img3c"],
+    ["img4a","img4b","img4c"]
+  ],
+
+  3: [
+    ["img1a","img1b","img1c"],
+    ["img2a","img2b","img2c"],
+    ["img3a","img3b","img3c"],
+    ["img4a","img4b","img4c"]
+  ]
+
 };
 
-let correct=0, wrong=0, round=0, streak=0;
+/* ===== STATE ===== */
+let correct=0, wrong=0, streak=0, round=0;
 let level=1;
 const MAX=20;
 let correctValue=1;
 let locked=false;
 
-/* UPDATE UI */
+/* ===== UPDATE UI ===== */
 function update(){
   correctScore.textContent=correct;
   wrongScore.textContent=wrong;
@@ -304,83 +191,69 @@ function update(){
   progressFill.style.width=(round/MAX)*100+"%";
 }
 
-/* NEW ROUND */
+/* ===== NEW ROUND ===== */
 function newRound(){
+
   if(round>=MAX){
     const acc=correct/MAX;
+
     if(acc>=0.8 && level<3) level++;
     else if(acc<=0.6 && level>1) level--;
+
     popup.style.display="flex";
     return;
   }
 
-  round++; locked=false;
+  round++;
+  locked=false;
 
   const pool=imagePools[level];
   const g=pool[Math.floor(Math.random()*pool.length)];
-  const odd=Math.floor(Math.random()*3);
-  const same=g.filter((_,i)=>i!==odd)[Math.floor(Math.random()*2)];
 
-  let d=[same,same,same];
-  d[Math.floor(Math.random()*3)]=g[odd];
-  d=d.sort(()=>Math.random()-0.5);
+  const oddIndex=Math.floor(Math.random()*3);
+  const sameIndex=(oddIndex+1)%3;
 
-  img1.src=d[0];
-  img2.src=d[1];
-  img3.src=d[2];
+  let display=[g[sameIndex], g[sameIndex], g[sameIndex]];
+  display[Math.floor(Math.random()*3)] = g[oddIndex];
 
-  correctValue=d.indexOf(g[odd])+1;
+  display = display.sort(()=>Math.random()-0.5);
+
+  img1.src=display[0];
+  img2.src=display[1];
+  img3.src=display[2];
+
+  correctValue = display.indexOf(g[oddIndex]) + 1;
+
   update();
 }
 
-/* HANDLE ANSWER */
+/* ===== HANDLE ===== */
 function handle(n){
   if(locked)return;
   locked=true;
 
   if(Number(n)===correctValue){
     correct++; streak++;
-    document.body.classList.add("glow-green");
   } else {
     wrong++; streak=0;
-    document.body.classList.add("glow-red");
   }
 
   update();
   setTimeout(newRound,400);
 }
 
-/* BUTTONS */
-document.querySelectorAll(".button-container button").forEach(b=>{
-  b.onclick=()=>handle(b.dataset.num);
-});
+/* ===== EVENTS ===== */
+document.querySelectorAll(".button-container button")
+.forEach(b=>b.onclick=()=>handle(b.dataset.num));
 
-/* SETTINGS */
-settingsBtn.onclick=e=>{
-  e.stopPropagation();
-  settingsPopup.style.display =
-    settingsPopup.style.display==="block"?"none":"block";
-};
-
-themeToggle.onchange=()=>{
-  document.body.classList.toggle("light",themeToggle.checked);
-};
-
-/* HELP */
 helpIcon.onmouseenter=()=>tooltip.style.display="block";
 helpIcon.onmouseleave=()=>tooltip.style.display="none";
-
-/* MENU */
-hamburger.onclick=e=>{
-  e.stopPropagation();
-  sidebar.classList.toggle("open");
-};
 
 /* START */
 newRound();
 update();
-</script>
 
+</script>
 </body>
 </html>
 </body>
