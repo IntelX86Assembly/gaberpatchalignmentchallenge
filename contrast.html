@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Performance</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #121212;
+  color: white;
+}
+
+.navbar {
+  width: 100%;
+  height: 60px;
+  background: #1f1f1f;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+}
+
+.hamburger {
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background: #1e1e1e;
+  padding-top: 60px;
+  transition: 0.3s;
+}
+
+.sidebar.open { left: 0; }
+
+.sidebar a {
+  display: block;
+  padding: 15px;
+  color: white;
+  text-decoration: none;
+}
+
+.sidebar a:hover { background: #333; }
+
+.content {
+  margin-top: 80px;
+  text-align: center;
+}
+
+/* canvas */
+canvas {
+  background: #1a1a1a;
+  border-radius: 10px;
+}
+
+/* labels */
+.label {
+  font-size: 14px;
+  fill: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="hamburger" id="hamburger">☰</div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <a href="index.html">Alignment Challenge</a>
+  <a href="index.html">Contrast Challenge</a>
+  <a href="index.html">Frequency Challenge</a>
+  <a href="performance.html">View Performance</a>
+</div>
+
+<div class="content">
+  <h2>Performance Over Time</h2>
+  <canvas id="chart" width="800" height="450"></canvas>
+</div>
+
+<script>
+const sidebar = document.getElementById("sidebar");
+const hamburger = document.getElementById("hamburger");
+
+hamburger.onclick = e => {
+  e.stopPropagation();
+  sidebar.classList.toggle("open");
+};
+
+document.addEventListener("click", e => {
+  if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+    sidebar.classList.remove("open");
+  }
+});
+
+const history = JSON.parse(localStorage.getItem("history")) || [];
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const padding = 60;
+  const w = canvas.width - padding * 2;
+  const h = canvas.height - padding * 2;
+
+  /* background grid */
+  ctx.strokeStyle = "#2a2a2a";
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i <= 10; i++) {
+    let y = padding + (h / 10) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(padding + w, y);
+    ctx.stroke();
+  }
+
+  /* empty state */
+  if (history.length === 0) {
+    ctx.fillStyle = "white";
+    ctx.fillText("No data yet", 350, 220);
+    return;
+  }
+
+  const maxY = 100;
+  const scaleX = w / (history.length - 1 || 1);
+  const scaleY = h / maxY;
+
+  const getX = i => padding + i * scaleX;
+  const getY = y => padding + (maxY - y) * scaleY;
+
+  /* LINE GRAPH */
+  ctx.strokeStyle = "limegreen";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  history.forEach((d, i) => {
+    const x = getX(i);
+    const y = getY(d.accuracy);
+
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+
+  /* POINTS */
+  history.forEach((d, i) => {
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(getX(i), getY(d.accuracy), 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  /* LINE OF BEST FIT */
+  const n = history.length;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0;
+
+  const ys = history.map(d => d.accuracy);
+
+  for (let i = 0; i < n; i++) {
+    sx += i;
+    sy += ys[i];
+    sxy += i * ys[i];
+    sxx += i * i;
+  }
+
+  const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx || 1);
+  const intercept = (sy - slope * sx) / n;
+
+  ctx.strokeStyle = "orange";
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+
+  const y1 = intercept;
+  const y2 = slope * (n - 1) + intercept;
+
+  ctx.moveTo(getX(0), getY(y1));
+  ctx.lineTo(getX(n - 1), getY(y2));
+
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* AXIS LABELS */
+  ctx.fillStyle = "white";
+  ctx.font = "14px Arial";
+
+  // Y axis label
+  ctx.save();
+  ctx.translate(15, canvas.height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText("Accuracy (%)", 0, 0);
+  ctx.restore();
+
+  // X axis label
+  ctx.fillText("Session", canvas.width / 2 - 30, canvas.height - 15);
+
+  // title inside chart
+  ctx.fillText("Learning Curve", canvas.width / 2 - 50, 25);
+}
+
+draw();
+</script>
+
+</body>
+</html>
