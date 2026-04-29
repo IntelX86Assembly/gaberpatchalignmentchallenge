@@ -15,11 +15,9 @@ body {
   flex-direction: column;
   align-items: center;
 
-  /* FIX: no full-screen vertical centering anymore */
   min-height: 100vh;
 }
 
-/* NAVBAR */
 .navbar {
   width: 100%;
   height: 60px;
@@ -38,7 +36,6 @@ body {
   cursor: pointer;
 }
 
-/* SIDEBAR */
 .sidebar {
   position: fixed;
   top: 0;
@@ -62,21 +59,16 @@ body {
 
 .sidebar a:hover { background: #333; }
 
-/* CONTENT (FIXED SPACING) */
 .content {
   text-align: center;
-
-  /* KEY FIX: pushes content below navbar */
   margin-top: 90px;
 }
 
-/* SCORE */
 .score {
   margin-bottom: 10px;
   font-size: 18px;
 }
 
-/* IMAGES */
 .image-container {
   display: flex;
   gap: 20px;
@@ -90,7 +82,6 @@ body {
   object-fit: cover;
 }
 
-/* BUTTONS */
 .button-container {
   display: flex;
   gap: 15px;
@@ -109,7 +100,7 @@ button {
 
 button:hover { background: #555; }
 
-/* GLOW */
+/* glow */
 body.glow-green { animation: glowGreen 0.5s ease; }
 body.glow-red { animation: glowRed 0.5s ease; }
 
@@ -125,7 +116,7 @@ body.glow-red { animation: glowRed 0.5s ease; }
   100% { box-shadow: 0 0 0px inset; }
 }
 
-/* POPUP */
+/* popup */
 .popup {
   position: fixed;
   top: 0; left: 0;
@@ -186,6 +177,9 @@ body.glow-red { animation: glowRed 0.5s ease; }
 </div>
 
 <script>
+/* =========================
+   IMAGES
+========================= */
 const images = [
   [
     "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
@@ -214,13 +208,73 @@ const MAX=20;
 let correctValue=1;
 let locked=false;
 
+/* =========================
+   AUDIO FIX (FULL RELIABLE)
+========================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+
+  audioCtx.resume().then(() => {
+    audioUnlocked = true;
+  });
+}
+
+document.addEventListener("click", unlockAudio);
+document.addEventListener("keydown", unlockAudio);
+
+function tone(freq, time) {
+  if (!audioUnlocked) return;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.frequency.value = freq;
+
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    audioCtx.currentTime + time
+  );
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + time);
+}
+
+function correctSound() {
+  tone(600, 0.1);
+  setTimeout(() => tone(900, 0.15), 120);
+}
+
+function wrongSound() {
+  tone(200, 0.2);
+}
+
+/* =========================
+   UI
+========================= */
 function update(){
   correctScore.textContent=correct;
   wrongScore.textContent=wrong;
 }
 
+function glow(type){
+  document.body.classList.remove("glow-green","glow-red");
+  void document.body.offsetWidth;
+  document.body.classList.add(type);
+  setTimeout(()=>document.body.classList.remove(type),400);
+}
+
 function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 
+/* =========================
+   GAME
+========================= */
 function newRound(){
   if(round>=MAX){
     let history=JSON.parse(localStorage.getItem("history"))||[];
@@ -240,8 +294,8 @@ function newRound(){
 
   const group=images[Math.floor(Math.random()*images.length)];
   const oddIndex=Math.floor(Math.random()*3);
-
   const sameIndexes=[0,1,2].filter(i=>i!==oddIndex);
+
   const same=group[sameIndexes[Math.floor(Math.random()*2)]];
   const odd=group[oddIndex];
 
@@ -256,24 +310,26 @@ function newRound(){
   correctValue=display.indexOf(odd)+1;
 }
 
+/* =========================
+   INPUT
+========================= */
 function handle(n){
   if(locked)return;
   locked=true;
 
   if(Number(n)===correctValue){
-    correct++; document.body.classList.add("glow-green");
+    correct++; glow("glow-green"); correctSound();
   } else {
-    wrong++; document.body.classList.add("glow-red");
+    wrong++; glow("glow-red"); wrongSound();
   }
-
-  setTimeout(()=>{
-    document.body.classList.remove("glow-green","glow-red");
-  },400);
 
   update();
   setTimeout(newRound,400);
 }
 
+/* =========================
+   EVENTS
+========================= */
 document.querySelectorAll("button").forEach(b=>{
   b.onclick=()=>handle(b.dataset.num);
 });
