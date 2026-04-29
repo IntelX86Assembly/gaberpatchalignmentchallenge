@@ -31,15 +31,21 @@ body {
   z-index: 1100;
 }
 
-.hamburger {
-  font-size: 26px;
-  cursor: pointer;
-}
+.hamburger { font-size: 26px; cursor: pointer; }
 
 .settings {
   margin-left: auto;
   font-size: 22px;
   cursor: pointer;
+}
+
+/* LEVEL DISPLAY */
+.level-indicator {
+  position: fixed;
+  top: 70px;
+  left: 15px;
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 /* SIDEBAR */
@@ -69,7 +75,7 @@ body {
 /* CONTENT */
 .content {
   text-align: center;
-  margin-top: 90px;
+  margin-top: 110px;
 }
 
 .score {
@@ -127,7 +133,7 @@ button {
 
 button:hover { background: #555; }
 
-/* HELP ICON */
+/* HELP */
 .help-icon {
   position: fixed;
   top: 70px;
@@ -140,7 +146,6 @@ button:hover { background: #555; }
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 1200;
 }
 
 .tooltip {
@@ -155,7 +160,7 @@ button:hover { background: #555; }
   font-size: 13px;
 }
 
-/* SETTINGS POPUP */
+/* SETTINGS */
 .settings-popup {
   position: fixed;
   top: 70px;
@@ -164,7 +169,6 @@ button:hover { background: #555; }
   padding: 12px;
   border-radius: 8px;
   display: none;
-  z-index: 1500;
 }
 
 /* LIGHT MODE */
@@ -174,17 +178,11 @@ body.light {
 }
 
 body.light .navbar,
-body.light .sidebar {
-  background: #ddd;
-}
+body.light .sidebar { background: #ddd; }
 
 body.light button {
   background: #ccc;
   color: #111;
-}
-
-body.light .progress-bar {
-  background: #bbb;
 }
 
 /* GLOW */
@@ -203,7 +201,7 @@ body.glow-red { animation: glowRed 0.5s ease; }
   100% { box-shadow: 0 0 0px inset; }
 }
 
-/* MAIN POPUP */
+/* POPUP */
 .popup {
   position: fixed;
   top: 0; left: 0;
@@ -213,7 +211,6 @@ body.glow-red { animation: glowRed 0.5s ease; }
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
 }
 
 .popup-content {
@@ -229,6 +226,10 @@ body.glow-red { animation: glowRed 0.5s ease; }
 <div class="navbar">
   <div class="hamburger" id="hamburger">☰</div>
   <div class="settings" id="settingsBtn">⚙️</div>
+</div>
+
+<div class="level-indicator">
+  Level: <span id="levelDisplay">1</span>
 </div>
 
 <div class="help-icon" id="helpIcon">?</div>
@@ -247,7 +248,8 @@ body.glow-red { animation: glowRed 0.5s ease; }
 
   <div class="score">
     Correct: <span id="correctScore">0</span> /
-    Incorrect: <span id="wrongScore">0</span>
+    Incorrect: <span id="wrongScore">0</span> |
+    Streak: <span id="streak">0</span>
   </div>
 
   <div class="progress-bar">
@@ -267,8 +269,7 @@ body.glow-red { animation: glowRed 0.5s ease; }
 
 <div class="settings-popup" id="settingsPopup">
   <label>
-    <input type="checkbox" id="themeToggle">
-    Light Mode
+    <input type="checkbox" id="themeToggle"> Light Mode
   </label>
 </div>
 
@@ -281,79 +282,42 @@ body.glow-red { animation: glowRed 0.5s ease; }
 </div>
 
 <script>
-const images = [
-  [
-    "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian-0.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian-1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
-  ],
-  [
-    "images/gabor-gaussian-44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian-45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian-46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
-  ],
-  [
-    "images/gabor-gaussian-89.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian-91.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
-  ],
-  [
-    "images/gabor-gaussian--46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian--45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
-    "images/gabor-gaussian--44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
-  ]
-];
+/* IMAGE POOLS (3 LEVELS) */
+const imagePools = {
+  1: [["images/gabor-gaussian--1.00.png","images/gabor-gaussian-0.00.png","images/gabor-gaussian-1.00.png"]],
+  2: [["images/gabor-gaussian--0.50.png","images/gabor-gaussian-0.00.png","images/gabor-gaussian-0.50.png"]],
+  3: [["images/gabor-gaussian--0.25.png","images/gabor-gaussian-0.00.png","images/gabor-gaussian-0.25.png"]]
+};
 
-let correct=0, wrong=0, round=0;
+let correct=0, wrong=0, round=0, streak=0;
+let level=1;
 const MAX=20;
 let correctValue=1;
 let locked=false;
 
-/* AUDIO */
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-let audioUnlocked=false;
-
-function unlockAudio(){
-  if(audioUnlocked) return;
-  audioCtx.resume().then(()=>audioUnlocked=true);
-}
-document.addEventListener("click",unlockAudio);
-document.addEventListener("keydown",unlockAudio);
-
-function tone(f,t){
-  if(!audioUnlocked) return;
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  o.connect(g); g.connect(audioCtx.destination);
-  o.frequency.value=f;
-  g.gain.setValueAtTime(0.2,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+t);
-  o.start(); o.stop(audioCtx.currentTime+t);
-}
-function correctSound(){tone(600,0.1);setTimeout(()=>tone(900,0.15),120);}
-function wrongSound(){tone(200,0.2);}
-
+/* UPDATE UI */
 function update(){
   correctScore.textContent=correct;
   wrongScore.textContent=wrong;
-  document.getElementById("progressFill").style.width=(round/MAX)*100+"%";
+  streak.textContent=streak;
+  levelDisplay.textContent=level;
+  progressFill.style.width=(round/MAX)*100+"%";
 }
 
-function glow(t){
-  document.body.classList.remove("glow-green","glow-red");
-  void document.body.offsetWidth;
-  document.body.classList.add(t);
-}
-
+/* NEW ROUND */
 function newRound(){
   if(round>=MAX){
+    const acc=correct/MAX;
+    if(acc>=0.8 && level<3) level++;
+    else if(acc<=0.6 && level>1) level--;
     popup.style.display="flex";
     return;
   }
 
   round++; locked=false;
 
-  const g=images[Math.floor(Math.random()*images.length)];
+  const pool=imagePools[level];
+  const g=pool[Math.floor(Math.random()*pool.length)];
   const odd=Math.floor(Math.random()*3);
   const same=g.filter((_,i)=>i!==odd)[Math.floor(Math.random()*2)];
 
@@ -369,61 +333,40 @@ function newRound(){
   update();
 }
 
+/* HANDLE ANSWER */
 function handle(n){
   if(locked)return;
   locked=true;
 
   if(Number(n)===correctValue){
-    correct++; glow("glow-green"); correctSound();
+    correct++; streak++;
+    document.body.classList.add("glow-green");
   } else {
-    wrong++; glow("glow-red"); wrongSound();
+    wrong++; streak=0;
+    document.body.classList.add("glow-red");
   }
 
   update();
   setTimeout(newRound,400);
 }
 
-/* BUTTON FIX: only game buttons */
+/* BUTTONS */
 document.querySelectorAll(".button-container button").forEach(b=>{
   b.onclick=()=>handle(b.dataset.num);
 });
 
-document.addEventListener("keydown",e=>{
-  if(["1","2","3"].includes(e.key))handle(e.key);
-});
-
 /* SETTINGS */
-const settingsBtn=document.getElementById("settingsBtn");
-const settingsPopup=document.getElementById("settingsPopup");
-const themeToggle=document.getElementById("themeToggle");
-
 settingsBtn.onclick=e=>{
   e.stopPropagation();
   settingsPopup.style.display =
     settingsPopup.style.display==="block"?"none":"block";
 };
 
-document.addEventListener("click",e=>{
-  if(!settingsPopup.contains(e.target)&&!settingsBtn.contains(e.target)){
-    settingsPopup.style.display="none";
-  }
-});
-
-/* THEME SAVE */
-if(localStorage.getItem("theme")==="light"){
-  document.body.classList.add("light");
-  themeToggle.checked=true;
-}
-
 themeToggle.onchange=()=>{
   document.body.classList.toggle("light",themeToggle.checked);
-  localStorage.setItem("theme",themeToggle.checked?"light":"dark");
 };
 
-/* HELP TOOLTIP */
-const helpIcon=document.getElementById("helpIcon");
-const tooltip=document.getElementById("tooltip");
-
+/* HELP */
 helpIcon.onmouseenter=()=>tooltip.style.display="block";
 helpIcon.onmouseleave=()=>tooltip.style.display="none";
 
@@ -433,19 +376,12 @@ hamburger.onclick=e=>{
   sidebar.classList.toggle("open");
 };
 
-document.addEventListener("click",e=>{
-  if(!sidebar.contains(e.target)&&!hamburger.contains(e.target))
-    sidebar.classList.remove("open");
-});
-
-/* POPUP BUTTONS */
-continueBtn.onclick=()=>location.reload();
-viewBtn.onclick=()=>location.href="performance.html";
-
 /* START */
 newRound();
 update();
 </script>
 
+</body>
+</html>
 </body>
 </html>
