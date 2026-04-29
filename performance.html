@@ -21,9 +21,13 @@ body {
   padding: 0 15px;
   position: fixed;
   top: 0;
+  z-index: 1000;
 }
 
-.hamburger { font-size: 26px; cursor: pointer; }
+.hamburger {
+  font-size: 26px;
+  cursor: pointer;
+}
 
 .sidebar {
   position: fixed;
@@ -45,22 +49,17 @@ body {
   text-decoration: none;
 }
 
+.sidebar a:hover { background: #333; }
+
 .content {
-  margin-top: 100px;
+  margin-top: 90px;
   text-align: center;
 }
 
-.chart {
-  width: 80%;
-  margin: auto;
-}
-
-.bar {
-  height: 20px;
-  background: limegreen;
-  margin: 6px 0;
-  text-align: left;
-  padding-left: 6px;
+/* graph container */
+canvas {
+  background: #1a1a1a;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -79,38 +78,120 @@ body {
 </div>
 
 <div class="content">
-  <h2>Performance History</h2>
-  <div class="chart" id="chart"></div>
+  <h2>Performance Over Time</h2>
+  <canvas id="chart" width="800" height="400"></canvas>
 </div>
 
 <script>
-const sidebar=document.getElementById("sidebar");
-const hamburger=document.getElementById("hamburger");
+const sidebar = document.getElementById("sidebar");
+const hamburger = document.getElementById("hamburger");
 
-hamburger.onclick=e=>{
-e.stopPropagation();
-sidebar.classList.toggle("open");
+hamburger.onclick = e => {
+  e.stopPropagation();
+  sidebar.classList.toggle("open");
 };
 
-document.addEventListener("click",e=>{
-if(!sidebar.contains(e.target)&&!hamburger.contains(e.target))
-sidebar.classList.remove("open");
+document.addEventListener("click", e => {
+  if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+    sidebar.classList.remove("open");
+  }
 });
 
-const h=JSON.parse(localStorage.getItem("history"))||[];
-const chart=document.getElementById("chart");
+/* LOAD DATA */
+const history = JSON.parse(localStorage.getItem("history")) || [];
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
 
-if(!h.length){
-chart.innerHTML="<p>No data yet</p>";
-}else{
-h.forEach((x,i)=>{
-const d=document.createElement("div");
-d.className="bar";
-d.style.width=x.accuracy+"%";
-d.textContent=`Session ${i+1} — ${x.accuracy}%`;
-chart.appendChild(d);
-});
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (history.length === 0) {
+    ctx.fillStyle = "white";
+    ctx.fillText("No data yet", 350, 200);
+    return;
+  }
+
+  const padding = 40;
+  const w = canvas.width - padding * 2;
+  const h = canvas.height - padding * 2;
+
+  const xs = history.map((_, i) => i);
+  const ys = history.map(d => d.accuracy);
+
+  const maxY = 100;
+  const minY = 0;
+
+  const scaleX = w / (history.length - 1 || 1);
+  const scaleY = h / (maxY - minY);
+
+  function getX(i) {
+    return padding + i * scaleX;
+  }
+
+  function getY(y) {
+    return padding + (maxY - y) * scaleY;
+  }
+
+  /* AXES */
+  ctx.strokeStyle = "#444";
+  ctx.beginPath();
+  ctx.moveTo(padding, padding);
+  ctx.lineTo(padding, padding + h);
+  ctx.lineTo(padding + w, padding + h);
+  ctx.stroke();
+
+  /* LINE GRAPH */
+  ctx.strokeStyle = "limegreen";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  history.forEach((d, i) => {
+    const x = getX(i);
+    const y = getY(d.accuracy);
+
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+
+  ctx.stroke();
+
+  /* DOTS */
+  history.forEach((d, i) => {
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(getX(i), getY(d.accuracy), 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  /* LINE OF BEST FIT (linear regression) */
+  const n = history.length;
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+
+  for (let i = 0; i < n; i++) {
+    sumX += i;
+    sumY += ys[i];
+    sumXY += i * ys[i];
+    sumXX += i * i;
+  }
+
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX || 1);
+  const intercept = (sumY - slope * sumX) / n;
+
+  ctx.strokeStyle = "orange";
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+
+  const y1 = slope * 0 + intercept;
+  const y2 = slope * (n - 1) + intercept;
+
+  ctx.moveTo(getX(0), getY(y1));
+  ctx.lineTo(getX(n - 1), getY(y2));
+
+  ctx.stroke();
+  ctx.setLineDash([]);
 }
+
+draw();
 </script>
 
 </body>
