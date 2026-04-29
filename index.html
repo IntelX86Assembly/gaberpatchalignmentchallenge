@@ -412,21 +412,29 @@ function glow(t){
 }
 
 function newRound(){
-  if(round>=MAX){
+if(round >= MAX){
 
-    let accuracy = correct / MAX;
+  let accuracy = correct / MAX;
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+  history.push({
+    accuracy: Math.round(accuracy * 100),
+    timestamp: Date.now(),
+    level: level
+  });
+  localStorage.setItem("history", JSON.stringify(history));
 
-    if(accuracy >= 0.8 && level < MAX_LEVEL){
-      level++;
-    } else if(accuracy <= 0.6 && level > MIN_LEVEL){
-      level--;
-    }
-
-    localStorage.setItem("level", level);
-
-    popup.style.display="flex";
-    return;
+  // level logic
+  if(accuracy >= 0.8 && level < MAX_LEVEL){
+    level++;
+  } else if(accuracy <= 0.6 && level > MIN_LEVEL){
+    level--;
   }
+
+  localStorage.setItem("level", level);
+
+  popup.style.display = "flex";
+  return;
+}
 
   round++; locked=false;
 
