@@ -231,6 +231,11 @@ body.glow-red { animation: glowRed 0.5s ease; }
   <div class="settings" id="settingsBtn">⚙️</div>
 </div>
 
+<!-- LEVEL DISPLAY -->
+<div style="position: fixed; top: 65px; left: 15px; font-size: 16px;">
+  Level: <span id="levelDisplay">1</span>
+</div>
+
 <div class="help-icon" id="helpIcon">?</div>
 <div class="tooltip" id="tooltip">
   This mode trains visual alignment. The ability of your brain to process and discriminate between visual offsets.
@@ -281,7 +286,56 @@ body.glow-red { animation: glowRed 0.5s ease; }
 </div>
 
 <script>
-const images = [
+
+/* =========================
+   LEVEL IMAGE SYSTEM (12 per level = 4 groups × 3 images)
+   ========================= */
+
+const levelImages = {
+  1: [
+  [
+    "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-0.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian-44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian-89.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-91.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian--46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian--45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian--44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  2: [
+  [
+    "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-0.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian-44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian-89.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-91.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian--46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian--45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian--44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+
+  3: [
   [
     "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
     "images/gabor-gaussian-0.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
@@ -302,10 +356,17 @@ const images = [
     "images/gabor-gaussian--45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
     "images/gabor-gaussian--44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
   ]
-];
+};
+
+/* ========================= */
 
 let correct=0, wrong=0, round=0;
 const MAX=20;
+
+let level = Number(localStorage.getItem("level")) || 1;
+const MIN_LEVEL = 1;
+const MAX_LEVEL = 3;
+
 let correctValue=1;
 let locked=false;
 
@@ -337,6 +398,7 @@ function update(){
   correctScore.textContent=correct;
   wrongScore.textContent=wrong;
   document.getElementById("progressFill").style.width=(round/MAX)*100+"%";
+  document.getElementById("levelDisplay").textContent = level;
 }
 
 function glow(t){
@@ -347,13 +409,26 @@ function glow(t){
 
 function newRound(){
   if(round>=MAX){
+
+    let accuracy = correct / MAX;
+
+    if(accuracy >= 0.8 && level < MAX_LEVEL){
+      level++;
+    } else if(accuracy <= 0.6 && level > MIN_LEVEL){
+      level--;
+    }
+
+    localStorage.setItem("level", level);
+
     popup.style.display="flex";
     return;
   }
 
   round++; locked=false;
 
-  const g=images[Math.floor(Math.random()*images.length)];
+  const pool = levelImages[level];
+  const g = pool[Math.floor(Math.random()*pool.length)];
+
   const odd=Math.floor(Math.random()*3);
   const same=g.filter((_,i)=>i!==odd)[Math.floor(Math.random()*2)];
 
@@ -383,7 +458,7 @@ function handle(n){
   setTimeout(newRound,400);
 }
 
-/* BUTTON FIX: only game buttons */
+/* BUTTONS */
 document.querySelectorAll(".button-container button").forEach(b=>{
   b.onclick=()=>handle(b.dataset.num);
 });
@@ -409,7 +484,7 @@ document.addEventListener("click",e=>{
   }
 });
 
-/* THEME SAVE */
+/* THEME */
 if(localStorage.getItem("theme")==="light"){
   document.body.classList.add("light");
   themeToggle.checked=true;
@@ -420,7 +495,7 @@ themeToggle.onchange=()=>{
   localStorage.setItem("theme",themeToggle.checked?"light":"dark");
 };
 
-/* HELP TOOLTIP */
+/* HELP */
 const helpIcon=document.getElementById("helpIcon");
 const tooltip=document.getElementById("tooltip");
 
@@ -438,14 +513,19 @@ document.addEventListener("click",e=>{
     sidebar.classList.remove("open");
 });
 
-/* POPUP BUTTONS */
+/* POPUP */
 continueBtn.onclick=()=>location.reload();
 viewBtn.onclick=()=>location.href="performance.html";
 
 /* START */
-newRound();
 update();
+newRound();
+
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
