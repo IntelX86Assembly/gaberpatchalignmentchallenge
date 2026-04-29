@@ -17,6 +17,7 @@ body {
   min-height: 100vh;
 }
 
+/* NAVBAR */
 .navbar {
   width: 100%;
   height: 60px;
@@ -35,6 +36,13 @@ body {
   cursor: pointer;
 }
 
+.settings {
+  margin-left: auto;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* SIDEBAR */
 .sidebar {
   position: fixed;
   top: 0;
@@ -58,6 +66,7 @@ body {
 
 .sidebar a:hover { background: #333; }
 
+/* CONTENT */
 .content {
   text-align: center;
   margin-top: 90px;
@@ -68,6 +77,24 @@ body {
   font-size: 18px;
 }
 
+/* PROGRESS BAR */
+.progress-bar {
+  width: 300px;
+  height: 10px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 10px auto 15px;
+}
+
+#progressFill {
+  height: 100%;
+  width: 0%;
+  background: limegreen;
+  transition: width 0.3s ease;
+}
+
+/* IMAGES */
 .image-container {
   display: flex;
   gap: 20px;
@@ -81,6 +108,7 @@ body {
   object-fit: cover;
 }
 
+/* BUTTONS */
 .button-container {
   display: flex;
   gap: 15px;
@@ -99,7 +127,67 @@ button {
 
 button:hover { background: #555; }
 
-/* glow */
+/* HELP ICON */
+.help-icon {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1200;
+}
+
+.tooltip {
+  position: fixed;
+  top: 105px;
+  right: 20px;
+  background: #222;
+  padding: 10px;
+  border-radius: 6px;
+  width: 220px;
+  display: none;
+  font-size: 13px;
+}
+
+/* SETTINGS POPUP */
+.settings-popup {
+  position: fixed;
+  top: 70px;
+  right: 15px;
+  background: #222;
+  padding: 12px;
+  border-radius: 8px;
+  display: none;
+  z-index: 1500;
+}
+
+/* LIGHT MODE */
+body.light {
+  background-color: #f5f5f5;
+  color: #111;
+}
+
+body.light .navbar,
+body.light .sidebar {
+  background: #ddd;
+}
+
+body.light button {
+  background: #ccc;
+  color: #111;
+}
+
+body.light .progress-bar {
+  background: #bbb;
+}
+
+/* GLOW */
 body.glow-green { animation: glowGreen 0.5s ease; }
 body.glow-red { animation: glowRed 0.5s ease; }
 
@@ -115,7 +203,7 @@ body.glow-red { animation: glowRed 0.5s ease; }
   100% { box-shadow: 0 0 0px inset; }
 }
 
-/* popup */
+/* MAIN POPUP */
 .popup {
   position: fixed;
   top: 0; left: 0;
@@ -140,6 +228,17 @@ body.glow-red { animation: glowRed 0.5s ease; }
 
 <div class="navbar">
   <div class="hamburger" id="hamburger">☰</div>
+  <div class="settings" id="settingsBtn">⚙️</div>
+</div>
+
+<!-- LEVEL DISPLAY -->
+<div style="position: fixed; top: 65px; left: 15px; font-size: 16px;">
+  Level: <span id="levelDisplay">1</span>
+</div>
+
+<div class="help-icon" id="helpIcon">?</div>
+<div class="tooltip" id="tooltip">
+  This mode trains visual alignment. The ability of your brain to process and discriminate between visual offsets.
 </div>
 
 <div id="sidebar" class="sidebar">
@@ -156,6 +255,10 @@ body.glow-red { animation: glowRed 0.5s ease; }
     Incorrect: <span id="wrongScore">0</span>
   </div>
 
+  <div class="progress-bar">
+    <div id="progressFill"></div>
+  </div>
+
   <div class="image-container">
     <img id="img1"><img id="img2"><img id="img3">
   </div>
@@ -167,6 +270,13 @@ body.glow-red { animation: glowRed 0.5s ease; }
   </div>
 </div>
 
+<div class="settings-popup" id="settingsPopup">
+  <label>
+    <input type="checkbox" id="themeToggle">
+    Light Mode
+  </label>
+</div>
+
 <div class="popup" id="popup">
   <div class="popup-content">
     <h2>Training Complete</h2>
@@ -176,35 +286,95 @@ body.glow-red { animation: glowRed 0.5s ease; }
 </div>
 
 <script>
-const images = [
-  [
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-140-0-0-140-0-0.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-160-0-0-160-0-0.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-180-0-0-180-0-0.png"
+
+/* =========================
+   LEVEL IMAGE SYSTEM (12 per level = 4 groups × 3 images)
+   ========================= */
+
+const levelImages = {
+  1: [
+    [
+      "images/gabor-gaussian--45.00-96-12.00-0.02-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian--45.00-96-12.00-0.04-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian--45.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-0.00-96-12.00-0.02-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-0.00-96-12.00-0.04-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-0.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-45.00-96-12.00-0.02-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-45.00-96-12.00-0.04-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-45.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-90.00-96-12.00-0.02-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-90.00-96-12.00-0.04-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-90.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ]
   ],
-  [
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-0-140-0-0-140-0.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-0-160-0-0-160-0.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-0-180-0-0-180-0.png"
+
+  2: [
+    [
+      "images/gabor-gaussian--45.00-96-12.00-0.08-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian--45.00-96-12.00-0.07-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian--45.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-0.00-96-12.00-0.08-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-0.00-96-12.00-0.07-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-0.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-45.00-96-12.00-0.08-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-45.00-96-12.00-0.07-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-45.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-90.00-96-12.00-0.08-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-90.00-96-12.00-0.07-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-90.00-96-12.00-0.06-0.00-128-128-128-255-255-255-0-0-0.png"
+    ]
   ],
-  [
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-0-0-140-0-0-140.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-0-0-160-0-0-160.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-0-0-180-0-0-180.png"
-  ],
-  [
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-140-140-140-140-140-140.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-160-160-160-160-160-160.png",
-    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-180-180-180-180-180-180.png"
+
+  3: [
+    [
+      "images/gabor-gaussian-90.00-96-12.00-0.23-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-90.00-96-12.00-0.25-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-90.00-96-12.00-0.28-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-45.00-96-12.00-0.23-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-45.00-96-12.00-0.25-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-45.00-96-12.00-0.28-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian-0.00-96-12.00-0.23-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-0.00-96-12.00-0.25-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian-0.00-96-12.00-0.28-0.00-128-128-128-255-255-255-0-0-0.png"
+    ],
+    [
+      "images/gabor-gaussian--45.00-96-12.00-0.23-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian--45.00-96-12.00-0.25-0.00-128-128-128-255-255-255-0-0-0.png",
+      "images/gabor-gaussian--45.00-96-12.00-0.28-0.00-128-128-128-255-255-255-0-0-0.png"
+    ]
   ]
-];
+};
+
+/* ========================= */
 
 let correct=0, wrong=0, round=0;
 const MAX=20;
+
+let level = Number(localStorage.getItem("level")) || 1;
+const MIN_LEVEL = 1;
+const MAX_LEVEL = 3;
+
 let correctValue=1;
 let locked=false;
 
-/* AUDIO FIX */
+/* AUDIO */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let audioUnlocked=false;
 
@@ -212,7 +382,6 @@ function unlockAudio(){
   if(audioUnlocked) return;
   audioCtx.resume().then(()=>audioUnlocked=true);
 }
-
 document.addEventListener("click",unlockAudio);
 document.addEventListener("keydown",unlockAudio);
 
@@ -226,13 +395,14 @@ function tone(f,t){
   g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+t);
   o.start(); o.stop(audioCtx.currentTime+t);
 }
-
 function correctSound(){tone(600,0.1);setTimeout(()=>tone(900,0.15),120);}
 function wrongSound(){tone(200,0.2);}
 
 function update(){
   correctScore.textContent=correct;
   wrongScore.textContent=wrong;
+  document.getElementById("progressFill").style.width=(round/MAX)*100+"%";
+  document.getElementById("levelDisplay").textContent = level;
 }
 
 function glow(t){
@@ -241,20 +411,28 @@ function glow(t){
   document.body.classList.add(t);
 }
 
-function shuffle(a){return a.sort(()=>Math.random()-0.5);}
-
 function newRound(){
   if(round>=MAX){
-    let h=JSON.parse(localStorage.getItem("history"))||[];
-    h.push({correct,wrong,accuracy:Math.round(correct/MAX*100),date:Date.now()});
-    localStorage.setItem("history",JSON.stringify(h));
+
+    let accuracy = correct / MAX;
+
+    if(accuracy >= 0.8 && level < MAX_LEVEL){
+      level++;
+    } else if(accuracy <= 0.6 && level > MIN_LEVEL){
+      level--;
+    }
+
+    localStorage.setItem("level", level);
+
     popup.style.display="flex";
     return;
   }
 
   round++; locked=false;
 
-  const g=images[Math.floor(Math.random()*images.length)];
+  const pool = levelImages[level];
+  const g = pool[Math.floor(Math.random()*pool.length)];
+
   const odd=Math.floor(Math.random()*3);
   const same=g.filter((_,i)=>i!==odd)[Math.floor(Math.random()*2)];
 
@@ -267,6 +445,7 @@ function newRound(){
   img3.src=d[2];
 
   correctValue=d.indexOf(g[odd])+1;
+  update();
 }
 
 function handle(n){
@@ -283,7 +462,8 @@ function handle(n){
   setTimeout(newRound,400);
 }
 
-document.querySelectorAll("button").forEach(b=>{
+/* BUTTONS */
+document.querySelectorAll(".button-container button").forEach(b=>{
   b.onclick=()=>handle(b.dataset.num);
 });
 
@@ -291,11 +471,42 @@ document.addEventListener("keydown",e=>{
   if(["1","2","3"].includes(e.key))handle(e.key);
 });
 
-/* popup buttons FIX */
-document.getElementById("continueBtn").onclick=()=>location.reload();
-document.getElementById("viewBtn").onclick=()=>location.href="performance.html";
+/* SETTINGS */
+const settingsBtn=document.getElementById("settingsBtn");
+const settingsPopup=document.getElementById("settingsPopup");
+const themeToggle=document.getElementById("themeToggle");
 
-/* menu */
+settingsBtn.onclick=e=>{
+  e.stopPropagation();
+  settingsPopup.style.display =
+    settingsPopup.style.display==="block"?"none":"block";
+};
+
+document.addEventListener("click",e=>{
+  if(!settingsPopup.contains(e.target)&&!settingsBtn.contains(e.target)){
+    settingsPopup.style.display="none";
+  }
+});
+
+/* THEME */
+if(localStorage.getItem("theme")==="light"){
+  document.body.classList.add("light");
+  themeToggle.checked=true;
+}
+
+themeToggle.onchange=()=>{
+  document.body.classList.toggle("light",themeToggle.checked);
+  localStorage.setItem("theme",themeToggle.checked?"light":"dark");
+};
+
+/* HELP */
+const helpIcon=document.getElementById("helpIcon");
+const tooltip=document.getElementById("tooltip");
+
+helpIcon.onmouseenter=()=>tooltip.style.display="block";
+helpIcon.onmouseleave=()=>tooltip.style.display="none";
+
+/* MENU */
 hamburger.onclick=e=>{
   e.stopPropagation();
   sidebar.classList.toggle("open");
@@ -306,7 +517,14 @@ document.addEventListener("click",e=>{
     sidebar.classList.remove("open");
 });
 
-newRound(); update();
+/* POPUP */
+continueBtn.onclick=()=>location.reload();
+viewBtn.onclick=()=>location.href="performance.html";
+
+/* START */
+update();
+newRound();
+
 </script>
 
 </body>
