@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Visual Challenge</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #121212;
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.navbar {
+  width: 100%;
+  height: 60px;
+  background: #1f1f1f;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+}
+
+.hamburger {
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 250px;
+  height: 100%;
+  background: #1e1e1e;
+  padding-top: 60px;
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar.open { left: 0; }
+
+.sidebar a {
+  display: block;
+  padding: 15px;
+  color: white;
+  text-decoration: none;
+}
+
+.sidebar a:hover { background: #333; }
+
+.content {
+  text-align: center;
+  margin-top: 90px;
+}
+
+.score {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.image-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.image-container img {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.button-container {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 18px;
+  cursor: pointer;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+button:hover { background: #555; }
+
+/* glow */
+body.glow-green { animation: glowGreen 0.5s ease; }
+body.glow-red { animation: glowRed 0.5s ease; }
+
+@keyframes glowGreen {
+  0% { box-shadow: 0 0 0px limegreen inset; }
+  50% { box-shadow: 0 0 25px 8px limegreen inset; }
+  100% { box-shadow: 0 0 0px inset; }
+}
+
+@keyframes glowRed {
+  0% { box-shadow: 0 0 0px red inset; }
+  50% { box-shadow: 0 0 25px 8px red inset; }
+  100% { box-shadow: 0 0 0px inset; }
+}
+
+/* popup */
+.popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.popup-content {
+  background: #222;
+  padding: 30px;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="hamburger" id="hamburger">☰</div>
+</div>
+
+<div id="sidebar" class="sidebar">
+  <a href="index.html">Alignment Challenge</a>
+  <a href="contrast.html">Contrast Challenge</a>
+  <a href="frequency.html">Frequency Challenge</a>
+  <a href="performance.html">View Performance</a>
+</div>
+
+<div class="content">
+
+  <div class="score">
+    Correct: <span id="correctScore">0</span> /
+    Incorrect: <span id="wrongScore">0</span>
+  </div>
+
+  <div class="image-container">
+    <img id="img1"><img id="img2"><img id="img3">
+  </div>
+
+  <div class="button-container">
+    <button data-num="1">1</button>
+    <button data-num="2">2</button>
+    <button data-num="3">3</button>
+  </div>
+</div>
+
+<div class="popup" id="popup">
+  <div class="popup-content">
+    <h2>Training Complete</h2>
+    <button id="continueBtn">Continue Training</button>
+    <button id="viewBtn">View Performance</button>
+  </div>
+</div>
+
+<script>
+const images = [
+  [
+    "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-0.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian-44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian-89.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-90.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian-91.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ],
+  [
+    "images/gabor-gaussian--46.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian--45.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
+    "images/gabor-gaussian--44.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png"
+  ]
+];
+
+let correct=0, wrong=0, round=0;
+const MAX=20;
+let correctValue=1;
+let locked=false;
+
+/* AUDIO FIX */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioUnlocked=false;
+
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioCtx.resume().then(()=>audioUnlocked=true);
+}
+
+document.addEventListener("click",unlockAudio);
+document.addEventListener("keydown",unlockAudio);
+
+function tone(f,t){
+  if(!audioUnlocked) return;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value=f;
+  g.gain.setValueAtTime(0.2,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+t);
+  o.start(); o.stop(audioCtx.currentTime+t);
+}
+
+function correctSound(){tone(600,0.1);setTimeout(()=>tone(900,0.15),120);}
+function wrongSound(){tone(200,0.2);}
+
+function update(){
+  correctScore.textContent=correct;
+  wrongScore.textContent=wrong;
+}
+
+function glow(t){
+  document.body.classList.remove("glow-green","glow-red");
+  void document.body.offsetWidth;
+  document.body.classList.add(t);
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+
+function newRound(){
+  if(round>=MAX){
+    let h=JSON.parse(localStorage.getItem("history"))||[];
+    h.push({correct,wrong,accuracy:Math.round(correct/MAX*100),date:Date.now()});
+    localStorage.setItem("history",JSON.stringify(h));
+    popup.style.display="flex";
+    return;
+  }
+
+  round++; locked=false;
+
+  const g=images[Math.floor(Math.random()*images.length)];
+  const odd=Math.floor(Math.random()*3);
+  const same=g.filter((_,i)=>i!==odd)[Math.floor(Math.random()*2)];
+
+  let d=[same,same,same];
+  d[Math.floor(Math.random()*3)]=g[odd];
+  d=d.sort(()=>Math.random()-0.5);
+
+  img1.src=d[0];
+  img2.src=d[1];
+  img3.src=d[2];
+
+  correctValue=d.indexOf(g[odd])+1;
+}
+
+function handle(n){
+  if(locked)return;
+  locked=true;
+
+  if(Number(n)===correctValue){
+    correct++; glow("glow-green"); correctSound();
+  } else {
+    wrong++; glow("glow-red"); wrongSound();
+  }
+
+  update();
+  setTimeout(newRound,400);
+}
+
+document.querySelectorAll("button").forEach(b=>{
+  b.onclick=()=>handle(b.dataset.num);
+});
+
+document.addEventListener("keydown",e=>{
+  if(["1","2","3"].includes(e.key))handle(e.key);
+});
+
+/* popup buttons FIX */
+document.getElementById("continueBtn").onclick=()=>location.reload();
+document.getElementById("viewBtn").onclick=()=>location.href="performance.html";
+
+/* menu */
+hamburger.onclick=e=>{
+  e.stopPropagation();
+  sidebar.classList.toggle("open");
+};
+
+document.addEventListener("click",e=>{
+  if(!sidebar.contains(e.target)&&!hamburger.contains(e.target))
+    sidebar.classList.remove("open");
+});
+
+newRound(); update();
+</script>
+
+</body>
+</html>
