@@ -14,7 +14,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-
   min-height: 100vh;
 }
 
@@ -144,9 +143,9 @@ body.glow-red { animation: glowRed 0.5s ease; }
 </div>
 
 <div id="sidebar" class="sidebar">
-  <a href="#">Alignment Challenge</a>
-  <a href="#">Contrast Challenge</a>
-  <a href="#">Frequency Challenge</a>
+  <a href="index.html">Alignment Challenge</a>
+  <a href="index.html">Contrast Challenge</a>
+  <a href="index.html">Frequency Challenge</a>
   <a href="performance.html">View Performance</a>
 </div>
 
@@ -171,15 +170,12 @@ body.glow-red { animation: glowRed 0.5s ease; }
 <div class="popup" id="popup">
   <div class="popup-content">
     <h2>Training Complete</h2>
-    <button onclick="location.reload()">Continue Training</button>
-    <button onclick="location.href='performance.html'">View Performance</button>
+    <button id="continueBtn">Continue Training</button>
+    <button id="viewBtn">View Performance</button>
   </div>
 </div>
 
 <script>
-/* =========================
-   IMAGES
-========================= */
 const images = [
   [
     "images/gabor-gaussian--1.00-96-12.00-0.10-0.00-128-128-128-255-255-255-0-0-0.png",
@@ -208,111 +204,71 @@ const MAX=20;
 let correctValue=1;
 let locked=false;
 
-/* =========================
-   AUDIO FIX (FULL RELIABLE)
-========================= */
+/* AUDIO FIX */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-let audioUnlocked = false;
+let audioUnlocked=false;
 
-function unlockAudio() {
-  if (audioUnlocked) return;
-
-  audioCtx.resume().then(() => {
-    audioUnlocked = true;
-  });
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioCtx.resume().then(()=>audioUnlocked=true);
 }
 
-document.addEventListener("click", unlockAudio);
-document.addEventListener("keydown", unlockAudio);
+document.addEventListener("click",unlockAudio);
+document.addEventListener("keydown",unlockAudio);
 
-function tone(freq, time) {
-  if (!audioUnlocked) return;
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.frequency.value = freq;
-
-  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(
-    0.0001,
-    audioCtx.currentTime + time
-  );
-
-  osc.start();
-  osc.stop(audioCtx.currentTime + time);
+function tone(f,t){
+  if(!audioUnlocked) return;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.value=f;
+  g.gain.setValueAtTime(0.2,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+t);
+  o.start(); o.stop(audioCtx.currentTime+t);
 }
 
-function correctSound() {
-  tone(600, 0.1);
-  setTimeout(() => tone(900, 0.15), 120);
-}
+function correctSound(){tone(600,0.1);setTimeout(()=>tone(900,0.15),120);}
+function wrongSound(){tone(200,0.2);}
 
-function wrongSound() {
-  tone(200, 0.2);
-}
-
-/* =========================
-   UI
-========================= */
 function update(){
   correctScore.textContent=correct;
   wrongScore.textContent=wrong;
 }
 
-function glow(type){
+function glow(t){
   document.body.classList.remove("glow-green","glow-red");
   void document.body.offsetWidth;
-  document.body.classList.add(type);
-  setTimeout(()=>document.body.classList.remove(type),400);
+  document.body.classList.add(t);
 }
 
 function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 
-/* =========================
-   GAME
-========================= */
 function newRound(){
   if(round>=MAX){
-    let history=JSON.parse(localStorage.getItem("history"))||[];
-    history.push({
-      correct,
-      wrong,
-      accuracy:Math.round((correct/MAX)*100),
-      date:Date.now()
-    });
-    localStorage.setItem("history",JSON.stringify(history));
+    let h=JSON.parse(localStorage.getItem("history"))||[];
+    h.push({correct,wrong,accuracy:Math.round(correct/MAX*100),date:Date.now()});
+    localStorage.setItem("history",JSON.stringify(h));
     popup.style.display="flex";
     return;
   }
 
-  round++;
-  locked=false;
+  round++; locked=false;
 
-  const group=images[Math.floor(Math.random()*images.length)];
-  const oddIndex=Math.floor(Math.random()*3);
-  const sameIndexes=[0,1,2].filter(i=>i!==oddIndex);
+  const g=images[Math.floor(Math.random()*images.length)];
+  const odd=Math.floor(Math.random()*3);
+  const same=g.filter((_,i)=>i!==odd)[Math.floor(Math.random()*2)];
 
-  const same=group[sameIndexes[Math.floor(Math.random()*2)]];
-  const odd=group[oddIndex];
+  let d=[same,same,same];
+  d[Math.floor(Math.random()*3)]=g[odd];
+  d=d.sort(()=>Math.random()-0.5);
 
-  let display=[same,same,same];
-  display[Math.floor(Math.random()*3)]=odd;
-  display=shuffle(display);
+  img1.src=d[0];
+  img2.src=d[1];
+  img3.src=d[2];
 
-  img1.src=display[0];
-  img2.src=display[1];
-  img3.src=display[2];
-
-  correctValue=display.indexOf(odd)+1;
+  correctValue=d.indexOf(g[odd])+1;
 }
 
-/* =========================
-   INPUT
-========================= */
 function handle(n){
   if(locked)return;
   locked=true;
@@ -327,9 +283,6 @@ function handle(n){
   setTimeout(newRound,400);
 }
 
-/* =========================
-   EVENTS
-========================= */
 document.querySelectorAll("button").forEach(b=>{
   b.onclick=()=>handle(b.dataset.num);
 });
@@ -338,9 +291,11 @@ document.addEventListener("keydown",e=>{
   if(["1","2","3"].includes(e.key))handle(e.key);
 });
 
-newRound(); update();
+/* popup buttons FIX */
+document.getElementById("continueBtn").onclick=()=>location.reload();
+document.getElementById("viewBtn").onclick=()=>location.href="performance.html";
 
-/* MENU */
+/* menu */
 hamburger.onclick=e=>{
   e.stopPropagation();
   sidebar.classList.toggle("open");
@@ -350,6 +305,8 @@ document.addEventListener("click",e=>{
   if(!sidebar.contains(e.target)&&!hamburger.contains(e.target))
     sidebar.classList.remove("open");
 });
+
+newRound(); update();
 </script>
 
 </body>
