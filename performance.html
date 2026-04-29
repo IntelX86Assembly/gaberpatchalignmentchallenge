@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Performance</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: Arial;
+    background: #121212;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .card {
+    background: #1f1f1f;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    width: 320px;
+  }
+
+  h2 { margin-bottom: 20px; }
+
+  .stat {
+    margin: 10px 0;
+    font-size: 18px;
+  }
+
+  button {
+    margin-top: 20px;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #333;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover { background: #555; }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Performance Summary</h2>
+
+  <div class="stat" id="correct"></div>
+  <div class="stat" id="wrong"></div>
+  <div class="stat" id="accuracy"></div>
+
+  <button onclick="window.location.href='index.html'">
+    Back to Training
+  </button>
+</div>
+
+<script>
+const data = JSON.parse(localStorage.getItem("visualChallengeSession")) || {
+  correct: 0,
+  wrong: 0,
+  rounds: 0
+};
+
+const accuracy = data.rounds
+  ? Math.round((data.correct / data.rounds) * 100)
+  : 0;
+
+document.getElementById("correct").textContent =
+  "Correct: " + data.correct;
+
+document.getElementById("wrong").textContent =
+  "Wrong: " + data.wrong;
+
+document.getElementById("accuracy").textContent =
+  "Accuracy: " + accuracy + "%";
+</script>
+
+</body>
+</html>
