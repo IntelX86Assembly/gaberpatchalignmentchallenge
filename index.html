@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Button Keyboard Demo</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .image-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .image-container img {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="image-container">
+    <img src="https://via.placeholder.com/150?text=1" alt="Image 1">
+    <img src="https://via.placeholder.com/150?text=2" alt="Image 2">
+    <img src="https://via.placeholder.com/150?text=3" alt="Image 3">
+  </div>
+
+  <div class="button-container">
+    <button onclick="handleInput(1)">1</button>
+    <button onclick="handleInput(2)">2</button>
+    <button onclick="handleInput(3)">3</button>
+  </div>
+
+  <script>
+    function handleInput(num) {
+      console.log("Button or key pressed:", num);
+    }
+
+    // Listen for keyboard input
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "1" || event.key === "2" || event.key === "3") {
+        handleInput(event.key);
+      }
+    });
+  </script>
+
+</body>
+</html>
