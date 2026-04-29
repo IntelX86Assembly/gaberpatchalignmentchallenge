@@ -10,29 +10,16 @@ body {
   font-family: Arial, sans-serif;
   background-color: #121212;
   color: white;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
-  padding-top: 60px;
+
+  /* FIX: no full-screen vertical centering anymore */
+  min-height: 100vh;
 }
 
-body.glow-green { animation: glowGreen 0.5s ease; }
-body.glow-red { animation: glowRed 0.5s ease; }
-
-@keyframes glowGreen {
-  0% { box-shadow: 0 0 0px limegreen inset; }
-  50% { box-shadow: 0 0 25px 8px limegreen inset; }
-  100% { box-shadow: 0 0 0px inset; }
-}
-
-@keyframes glowRed {
-  0% { box-shadow: 0 0 0px red inset; }
-  50% { box-shadow: 0 0 25px 8px red inset; }
-  100% { box-shadow: 0 0 0px inset; }
-}
-
+/* NAVBAR */
 .navbar {
   width: 100%;
   height: 60px;
@@ -46,8 +33,12 @@ body.glow-red { animation: glowRed 0.5s ease; }
   z-index: 1100;
 }
 
-.hamburger { font-size: 26px; cursor: pointer; }
+.hamburger {
+  font-size: 26px;
+  cursor: pointer;
+}
 
+/* SIDEBAR */
 .sidebar {
   position: fixed;
   top: 0;
@@ -71,18 +62,21 @@ body.glow-red { animation: glowRed 0.5s ease; }
 
 .sidebar a:hover { background: #333; }
 
-.content { text-align: center; }
+/* CONTENT (FIXED SPACING) */
+.content {
+  text-align: center;
 
+  /* KEY FIX: pushes content below navbar */
+  margin-top: 90px;
+}
+
+/* SCORE */
 .score {
   margin-bottom: 10px;
   font-size: 18px;
 }
 
-.content {
-  text-align: center;
-  transform: translateY(-80px);
-}
-  
+/* IMAGES */
 .image-container {
   display: flex;
   gap: 20px;
@@ -96,6 +90,7 @@ body.glow-red { animation: glowRed 0.5s ease; }
   object-fit: cover;
 }
 
+/* BUTTONS */
 .button-container {
   display: flex;
   gap: 15px;
@@ -114,6 +109,23 @@ button {
 
 button:hover { background: #555; }
 
+/* GLOW */
+body.glow-green { animation: glowGreen 0.5s ease; }
+body.glow-red { animation: glowRed 0.5s ease; }
+
+@keyframes glowGreen {
+  0% { box-shadow: 0 0 0px limegreen inset; }
+  50% { box-shadow: 0 0 25px 8px limegreen inset; }
+  100% { box-shadow: 0 0 0px inset; }
+}
+
+@keyframes glowRed {
+  0% { box-shadow: 0 0 0px red inset; }
+  50% { box-shadow: 0 0 25px 8px red inset; }
+  100% { box-shadow: 0 0 0px inset; }
+}
+
+/* POPUP */
 .popup {
   position: fixed;
   top: 0; left: 0;
@@ -207,13 +219,6 @@ function update(){
   wrongScore.textContent=wrong;
 }
 
-function glow(type){
-  document.body.classList.remove("glow-green","glow-red");
-  void document.body.offsetWidth;
-  document.body.classList.add(type);
-  setTimeout(()=>document.body.classList.remove(type),400);
-}
-
 function shuffle(a){return a.sort(()=>Math.random()-0.5);}
 
 function newRound(){
@@ -235,8 +240,8 @@ function newRound(){
 
   const group=images[Math.floor(Math.random()*images.length)];
   const oddIndex=Math.floor(Math.random()*3);
-  const sameIndexes=[0,1,2].filter(i=>i!==oddIndex);
 
+  const sameIndexes=[0,1,2].filter(i=>i!==oddIndex);
   const same=group[sameIndexes[Math.floor(Math.random()*2)]];
   const odd=group[oddIndex];
 
@@ -256,10 +261,14 @@ function handle(n){
   locked=true;
 
   if(Number(n)===correctValue){
-    correct++; glow("glow-green");
+    correct++; document.body.classList.add("glow-green");
   } else {
-    wrong++; glow("glow-red");
+    wrong++; document.body.classList.add("glow-red");
   }
+
+  setTimeout(()=>{
+    document.body.classList.remove("glow-green","glow-red");
+  },400);
 
   update();
   setTimeout(newRound,400);
